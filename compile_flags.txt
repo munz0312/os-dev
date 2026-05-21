@@ -1,0 +1,9 @@
+-ffreestanding
+-target
+i686-elf
+-isystem
+/home/munzir/opt/cross/lib/gcc/i686-elf/16.1.0/include
+-I
+kernel/include
+-I
+libc/include
