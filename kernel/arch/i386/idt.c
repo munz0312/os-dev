@@ -32,18 +32,17 @@ void isr_dispatch(uint32_t vector) {
     if (vector < 32) {
         __asm__ volatile("cli; hlt");
     } else {
-        uint8_t scan_code;
-        char c;
         switch (vector) {
 
-        case 33:
-            scan_code = inb(0x60);
+        case 33: {
+            uint8_t scan_code = inb(0x60);
             if (scan_code & 0x80)
                 break;
-            c = scan_code_to_ascii[scan_code];
+            char c = scan_code_to_ascii[scan_code];
             if (c != 0)
                 terminal_putchar(c);
             break;
+        }
 
         default:
             break;

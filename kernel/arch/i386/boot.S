@@ -25,9 +25,15 @@ stack_base:
 .type _start, @function
 _start:
 	movl $stack_base, %esp
-
+    
+    movl %eax, %esi
+    movl %ebx, %edi
+    
 	# Call the global constructors.
 	call _init
+
+    push %edi 
+    push %esi
 
 	# Transfer control to the main kernel.
 	call kernel_main
