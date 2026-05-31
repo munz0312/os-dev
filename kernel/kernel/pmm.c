@@ -73,6 +73,7 @@ void pmm_init(multiboot_info_t *mbd) {
     bitmap_set(0);
 }
 
+// Returns the (physical) base address to a newly allocated page frame
 uint32_t pmm_alloc_frame() {
     uint32_t pfn = 0;
 
