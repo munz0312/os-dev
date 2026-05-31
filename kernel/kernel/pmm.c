@@ -1,6 +1,8 @@
 #include "kernel/multiboot.h"
+#include <kernel/pmm.h>
 #include <stdint.h>
 #include <string.h>
+
 #define FREE 0x0
 #define USED 0x1
 #define NPAGES 32768
