@@ -1,17 +1,8 @@
-#include "kernel/tty.h"
-#include "sys/io.h"
 #include <kernel/idt.h>
+#include <kernel/keyboard.h>
 #include <kernel/pic.h>
 #include <stdbool.h>
 #include <stdint.h>
-
-char scan_code_to_ascii[128] = {
-    0,   0,   '1',  '2',  '3',  '4', '5', '6',  '7', '8', '9', '0',
-    '-', '=', '\b', '\t', 'q',  'w', 'e', 'r',  't', 'y', 'u', 'i',
-    'o', 'p', '[',  ']',  '\n', 0,   'a', 's',  'd', 'f', 'g', 'h',
-    'j', 'k', 'l',  ';',  '\'', '`', 0,   '\\', 'z', 'x', 'c', 'v',
-    'b', 'n', 'm',  ',',  '.',  '/', 0,   '*',  0,   ' ',
-};
 
 typedef struct __attribute__((packed)) {
     uint16_t offset_low;
@@ -35,12 +26,7 @@ void isr_dispatch(uint32_t vector) {
         switch (vector) {
 
         case 33: {
-            uint8_t scan_code = inb(0x60);
-            if (scan_code & 0x80)
-                break;
-            char c = scan_code_to_ascii[scan_code];
-            if (c != 0)
-                terminal_putchar(c);
+            keyboard_handler();
             break;
         }
 

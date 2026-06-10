@@ -11,6 +11,7 @@ extern uint32_t endkernel;
 
 static uint32_t bitmap[NPAGES / 32];
 
+// Allocate a page frame by setting it's corresponding bit in the bitmap
 static void bitmap_set(uint32_t pfn) {
     // find which uint32_t in the bitmap the page frame is in.
     uint32_t index = pfn >> 5;
@@ -21,6 +22,7 @@ static void bitmap_set(uint32_t pfn) {
     bitmap[index] |= (USED << bit);
 }
 
+// Free a page frame by clearing it's corresponding bit in the bitmap
 static void bitmap_clear(uint32_t pfn) {
     // find which uint32_t in the bitmap the page frame is in.
     uint32_t index = pfn >> 5;
@@ -31,6 +33,7 @@ static void bitmap_clear(uint32_t pfn) {
     bitmap[index] &= ~(1 << bit);
 }
 
+// Test if page frame is free or not in the bitmap
 static uint32_t bitmap_test(uint32_t pfn) {
     // find which uint32_t in the bitmap the page frame is in.
     uint32_t index = pfn >> 5;
@@ -62,6 +65,8 @@ void pmm_init(multiboot_info_t *mbd) {
         }
     }
 
+    // This code figures out which page frames the kernel is using and marks
+    // them as used
     uint32_t startkernel = 0x100000;
     uint32_t kpages = (endkernel_addr - startkernel + 0xFFF) / 0x1000;
     uint32_t startkernel_pf = startkernel / 0x1000;
