@@ -3,6 +3,7 @@
 #include <kernel/pic.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 
 typedef struct __attribute__((packed)) {
     uint16_t offset_low;
@@ -19,23 +20,33 @@ typedef struct __attribute__((packed)) {
 
 __attribute__((aligned(0x10))) static IDT_entry idt[256];
 
-void isr_dispatch(uint32_t vector) {
-    if (vector < 32) {
+void isr_dispatch(uint32_t vector, uint32_t error_code) {
+
+    switch (vector) {
+
+    // page fault
+    case 14: {
+        uint32_t faulting_addr;
+        // virtual address that caused the fault is in CR2
+        __asm__ volatile("mov %%cr2, %0" : "=r"(faulting_addr));
+        printf("page fault caused by address: 0x%x", faulting_addr);
+
+        // disable interrupts and halt execution (for now)
         __asm__ volatile("cli; hlt");
-    } else {
-        switch (vector) {
-
-        case 33: {
-            keyboard_handler();
-            break;
-        }
-
-        default:
-            break;
-        }
-        PIC_sendEOI(vector - 32);
-        return;
+        break;
     }
+
+    case 33: {
+        keyboard_handler();
+        break;
+    }
+
+    default:
+        break;
+    }
+    if (vector >= 32)
+        PIC_sendEOI(vector - 32);
+    return;
 }
 
 void idt_set_descriptor(uint8_t vector, void *isr, uint8_t flags);

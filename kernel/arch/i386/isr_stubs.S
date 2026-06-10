@@ -4,15 +4,16 @@
 isr_stub_\num:
     push $\num
     call isr_dispatch
-    addl $4, %esp
+    addl $8, %esp
     iret
 .endm
 
 .macro isr_no_err_stub num
 isr_stub_\num:
+    push $0
     push $\num
     call isr_dispatch
-    addl $4, %esp
+    addl $8, %esp
     iret
 .endm
 

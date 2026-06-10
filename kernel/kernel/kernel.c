@@ -25,6 +25,10 @@ void kernel_main(uint32_t magic, multiboot_info_t *mbd) {
     terminal_initialize();
     init_keyboard();
 
+    int *faulting_addr = (int *)0x500000;
+
+    *faulting_addr = 42;
+
     write_serial_string("Hello, host!\n");
     while (true) {
         __asm__ volatile("hlt");
