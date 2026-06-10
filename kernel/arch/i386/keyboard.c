@@ -40,6 +40,7 @@ void keyboard_handler() {
     switch (key) {
     case 1:
     case 29:
+        break;
     // right shift
     case 54:
         if (press == 0) {
@@ -49,6 +50,12 @@ void keyboard_handler() {
         }
         break;
     case 56:
+        break;
+    case 58:
+        if (press == 0) {
+            caps_lock_on = !caps_lock_on;
+        }
+        break;
     case 59:
     case 60:
     case 61:

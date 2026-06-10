@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include <sys/io.h>
 
 #include <kernel/tty.h>
 
@@ -15,6 +16,14 @@ static size_t terminal_row;
 static size_t terminal_column;
 static uint8_t terminal_color;
 static uint16_t *terminal_buffer;
+
+void terminal_update_cursor() {
+    uint16_t pos = terminal_row * VGA_WIDTH + terminal_column;
+    outb(0x3D4, 0x0F);
+    outb(0x3D5, (uint8_t)(pos & 0xFF));
+    outb(0x3D4, 0x0E);
+    outb(0x3D5, (uint8_t)((pos >> 8) & 0xFF));
+}
 
 void terminal_initialize(void) {
     terminal_row = 0;
@@ -79,6 +88,7 @@ void terminal_putchar(char c) {
 void terminal_write(const char *data, size_t size) {
     for (size_t i = 0; i < size; i++)
         terminal_putchar(data[i]);
+    terminal_update_cursor();
 }
 
 void terminal_writestring(const char *data) {
