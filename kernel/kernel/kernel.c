@@ -28,20 +28,19 @@ void kernel_main(uint32_t magic, multiboot_info_t *mbd) {
     heap_init();
     init_keyboard();
 
-    int *ptr1 = (int *)kmalloc(4080);
+    int *a = kmalloc(100);
+    int *b = kmalloc(100);
+    int *c = kmalloc(100);
 
-    int *ptr2 = (int *)kmalloc(1000);
+    printf("a: %p\n", a);
+    printf("b: %p\n", b);
+    printf("c: %p\n", c);
 
-    printf("ptr1: %p\n", ptr1);
-    printf("ptr2: %p\n", ptr2);
+    kfree(a);
+    kfree(b);
 
-    kfree(ptr1);
-
-    int *ptr3 = kmalloc(1000);
-    printf("ptr3: %p\n", ptr3);
-
-    kfree(ptr2);
-    kfree(ptr3);
+    int *d = kmalloc(200);
+    printf("d: %p\n", d);
 
     write_serial_string("Hello, host!\n");
     while (true) {

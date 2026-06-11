@@ -51,6 +51,17 @@ static int32_t grow_heap() {
     return 0;
 }
 
+void coalesce() {
+    memory_header *curr = (memory_header *)START_ADDR;
+    while (curr != NULL) {
+        while (curr->is_free && curr->next != NULL && curr->next->is_free) {
+            curr->size += curr->next->size + sizeof(memory_header);
+            curr->next = curr->next->next;
+        }
+        curr = curr->next;
+    }
+}
+
 void *kmalloc(size_t requested_size) {
 
     while (true) {
@@ -71,7 +82,7 @@ void *kmalloc(size_t requested_size) {
 
             // if the block is bigger then do a split to give the exact amount
             // needed (need at least requested_size + sizeof(memory_header))
-            if (next->size > (requested_size + sizeof(memory_header))) {
+            if (next->size >= (requested_size + sizeof(memory_header))) {
                 memory_header *new =
                     (memory_header *)((char *)next + sizeof(memory_header) +
                                       requested_size);
@@ -105,6 +116,7 @@ void kfree(void *src) {
     if ((uint32_t)header < heap_boundary && (uint32_t)header >= START_ADDR &&
         header->magic == 0xDEADBEEF) {
         header->is_free = true;
+        coalesce();
     } else {
         printf("invalid ptr: 0x%p\n", src);
         __asm__ volatile("cli; hlt");
