@@ -1,6 +1,7 @@
 #include <kernel/gdt.h>
 #include <kernel/idt.h>
 #include <kernel/keyboard.h>
+#include <kernel/kmalloc.h>
 #include <kernel/multiboot.h>
 #include <kernel/paging.h>
 #include <kernel/pic.h>
@@ -10,6 +11,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 
 void kernel_main(uint32_t magic, multiboot_info_t *mbd) {
     init_serial();
@@ -22,12 +24,19 @@ void kernel_main(uint32_t magic, multiboot_info_t *mbd) {
 
     // divide error interrupt
     // __asm__ volatile("int $0");
+    heap_init();
     terminal_initialize();
     init_keyboard();
 
-    int *faulting_addr = (int *)0x500000;
+    int *ptr = (int *)kmalloc(sizeof(int));
 
-    *faulting_addr = 42;
+    *ptr = 42;
+
+    printf("%d\n", *ptr);
+
+    kfree(ptr);
+
+    kfree((void *)(0x00400000 + 1000));
 
     write_serial_string("Hello, host!\n");
     while (true) {
