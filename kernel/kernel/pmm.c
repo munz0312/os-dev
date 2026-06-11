@@ -79,7 +79,8 @@ void pmm_init(multiboot_info_t *mbd) {
 }
 
 // Returns the (physical) base address to a newly allocated page frame
-uint32_t pmm_alloc_frame() {
+// or -1 if it fails
+int32_t pmm_alloc_frame() {
     uint32_t pfn = 0;
 
     while (bitmap_test(pfn)) {

@@ -9,7 +9,7 @@
 
 #define START_ADDR 0x00400000
 
-uint32_t heap_boundary;
+static uint32_t heap_boundary;
 
 typedef struct memory_header {
     size_t size;
@@ -29,37 +29,69 @@ void heap_init() {
     heap_boundary = START_ADDR + 4096;
 }
 
-void *kmalloc(size_t requested_size) {
+static int32_t grow_heap() {
+    int32_t heap_page = pmm_alloc_frame();
+    if (heap_page == -1)
+        return -1;
+    map_page(heap_boundary, heap_page, 0x3);
+    memory_header *new = (memory_header *)heap_boundary;
+    new->is_free = true;
+    new->magic = 0xDEADBEEF;
+    new->next = NULL;
+    new->size = 4096 - sizeof(memory_header);
+
     memory_header *head = (memory_header *)START_ADDR;
+    memory_header *last = head;
+    for (; last->next != NULL; last = last->next)
+        ;
 
-    for (memory_header *next = head; next != NULL; next = next->next) {
+    last->next = new;
 
-        if (!next->is_free) {
-            continue;
+    heap_boundary += 4096;
+    return 0;
+}
+
+void *kmalloc(size_t requested_size) {
+
+    while (true) {
+        memory_header *head = (memory_header *)START_ADDR;
+
+        for (memory_header *next = head; next != NULL; next = next->next) {
+
+            if (!next->is_free || next->size < requested_size) {
+                continue;
+            }
+
+            // if the block.size == requested_size then just return the pointer
+            // to it
+            if (next->size == requested_size) {
+                next->is_free = false;
+                return (void *)((char *)next + sizeof(memory_header));
+            }
+
+            // if the block is bigger then do a split to give the exact amount
+            // needed (need at least requested_size + sizeof(memory_header))
+            if (next->size > (requested_size + sizeof(memory_header))) {
+                memory_header *new =
+                    (memory_header *)((char *)next + sizeof(memory_header) +
+                                      requested_size);
+                new->size = next->size - requested_size - sizeof(memory_header);
+                new->is_free = true;
+                new->magic = 0xDEADBEEF;
+                new->next = next->next;
+
+                next->size = requested_size;
+                next->next = new;
+                next->is_free = false;
+                return (void *)((char *)next + sizeof(memory_header));
+            }
         }
 
-        // if the block.size == requested_size then just return the pointer to
-        // it
-        if (next->size == requested_size) {
-            next->is_free = false;
-            return (void *)((char *)next + sizeof(memory_header));
-        }
-
-        // if the block is bigger then do a split to give the exact amount
-        // needed (need at least requested_size + sizeof(memory_header))
-        if (next->size > (requested_size + sizeof(memory_header))) {
-            memory_header *new =
-                (memory_header *)((char *)next + sizeof(memory_header) +
-                                  requested_size);
-            new->size = next->size - requested_size - sizeof(memory_header);
-            new->is_free = true;
-            new->magic = 0xDEADBEEF;
-            new->next = next->next;
-
-            next->size = requested_size;
-            next->next = new;
-            next->is_free = false;
-            return (void *)((char *)next + sizeof(memory_header));
+        // couldn't find a suitable memory block - try allocating more
+        // memory to the heap
+        if (grow_heap() == -1) {
+            printf("no memory left");
+            __asm__ volatile("cli; hlt");
         }
     }
 

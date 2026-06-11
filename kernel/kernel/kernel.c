@@ -24,19 +24,24 @@ void kernel_main(uint32_t magic, multiboot_info_t *mbd) {
 
     // divide error interrupt
     // __asm__ volatile("int $0");
-    heap_init();
     terminal_initialize();
+    heap_init();
     init_keyboard();
 
-    int *ptr = (int *)kmalloc(sizeof(int));
+    int *ptr1 = (int *)kmalloc(4080);
 
-    *ptr = 42;
+    int *ptr2 = (int *)kmalloc(1000);
 
-    printf("%d\n", *ptr);
+    printf("ptr1: %p\n", ptr1);
+    printf("ptr2: %p\n", ptr2);
 
-    kfree(ptr);
+    kfree(ptr1);
 
-    kfree((void *)(0x00400000 + 1000));
+    int *ptr3 = kmalloc(1000);
+    printf("ptr3: %p\n", ptr3);
+
+    kfree(ptr2);
+    kfree(ptr3);
 
     write_serial_string("Hello, host!\n");
     while (true) {
