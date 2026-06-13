@@ -19,3 +19,5 @@ typedef struct thread {
 // defined in switch.S
 void switch_context(uint32_t *old_esp, uint32_t *new_esp);
 thread *thread_create(const char *name, void (*entry)(void));
+void init_threading();
+void schedule();

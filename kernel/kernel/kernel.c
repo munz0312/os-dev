@@ -15,8 +15,23 @@
 #include <stdint.h>
 #include <stdio.h>
 
+void thread_a() {
+    printf("hello from thread A!\n");
+    schedule();
+    printf("hello from thread A!\n");
+    schedule();
+
+    while (true) {
+        __asm__ volatile("hlt");
+    }
+}
+
 void thread_b() {
     printf("hello from thread B!\n");
+    schedule();
+    printf("hello from thread B!\n");
+    schedule();
+
     while (true) {
         __asm__ volatile("hlt");
     }
@@ -38,14 +53,14 @@ void kernel_main(uint32_t magic, multiboot_info_t *mbd) {
     heap_init();
     init_keyboard();
 
-    thread main_thread;
-    main_thread.esp = 0;
+    init_threading();
 
+    thread *a = thread_create("thread_a", thread_a);
     thread *b = thread_create("thread_b", thread_b);
-
-    printf("switching to thread B...\n");
-    switch_context(&main_thread.esp, &b->esp);
-    printf("back in main!\n");
+    printf("hello from main thread\n");
+    schedule();
+    printf("hello from main thread\n");
+    schedule();
 
     write_serial_string("Hello, host!\n");
     while (true) {
