@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
+uint32_t ticks;
+
 typedef struct __attribute__((packed)) {
     uint16_t offset_low;
     uint16_t kernel_cs;
@@ -36,6 +38,11 @@ void isr_dispatch(uint32_t vector, uint32_t error_code) {
         break;
     }
 
+    case 32: {
+        ticks += 1;
+        break;
+    }
+
     case 33: {
         keyboard_handler();
         break;
@@ -48,8 +55,6 @@ void isr_dispatch(uint32_t vector, uint32_t error_code) {
         PIC_sendEOI(vector - 32);
     return;
 }
-
-void idt_set_descriptor(uint8_t vector, void *isr, uint8_t flags);
 
 void idt_set_descriptor(uint8_t vector, void *isr, uint8_t flags) {
     IDT_entry *descriptor = &idt[vector];

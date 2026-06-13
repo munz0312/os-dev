@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
+extern uint32_t ticks;
+
 char lowercase[128] = {
     0,   0,   '1',  '2',  '3',  '4', '5', '6',  '7', '8', '9', '0',
     '-', '=', '\b', '\t', 'q',  'w', 'e', 'r',  't', 'y', 'u', 'i',
@@ -57,6 +59,9 @@ void keyboard_handler() {
         }
         break;
     case 59:
+        if (press == 0)
+            printf("\nticks: %d\n", ticks);
+        break;
     case 60:
     case 61:
     case 62:
@@ -79,7 +84,7 @@ void keyboard_handler() {
         break;
     default:
         if (press == 0) {
-            if (caps_lock_on || shift_on) {
+            if (caps_lock_on != shift_on) {
                 printf("%c", uppercase[key]);
             } else {
                 printf("%c", lowercase[key]);
