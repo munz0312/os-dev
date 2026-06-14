@@ -16,8 +16,11 @@ typedef struct thread {
     struct thread *next;
 } thread;
 
-// defined in switch.S
+// defined in switch.S. please lock the scheduler before calling
 void switch_context(uint32_t *old_esp, uint32_t *new_esp);
 thread *thread_create(const char *name, void (*entry)(void));
 void init_threading();
+// please lock the scheduler before calling
 void schedule();
+void lock_scheduler();
+void unlock_scheduler();

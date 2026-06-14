@@ -3,7 +3,27 @@
 #include <stdint.h>
 #include <string.h>
 
+int IRQ_disable_counter = 0;
+
+void lock_scheduler() {
+#ifndef SMP
+    __asm__ volatile("cli");
+    IRQ_disable_counter++;
+#endif
+}
+
+void unlock_scheduler() {
+#ifndef SMP
+    IRQ_disable_counter--;
+    if (IRQ_disable_counter == 0) {
+        __asm__ volatile("sti");
+    }
+#endif
+}
+
 thread *current_thread;
+thread *first_thread_ready = NULL;
+thread *last_thread_ready = NULL;
 
 void init_threading() {
     current_thread = kmalloc(sizeof(thread));
@@ -11,16 +31,32 @@ void init_threading() {
     current_thread->status = RUNNING;
     memcpy(current_thread->name, "main", 5);
     current_thread->esp = 0;
-    current_thread->next = current_thread;
+    current_thread->next = NULL;
 }
 
 void schedule() {
-    thread *old = current_thread;
-    thread *next = current_thread->next;
-    old->status = READY;
-    next->status = RUNNING;
-    current_thread = next;
-    switch_context(&old->esp, &next->esp);
+    if (first_thread_ready != NULL) {
+
+        thread *old = current_thread;
+        thread *task = first_thread_ready;
+
+        first_thread_ready = task->next;
+        task->status = RUNNING;
+        current_thread = task;
+
+        // re-add the descheduled thread
+        old->status = READY;
+        old->next = NULL;
+        if (first_thread_ready == NULL) {
+            first_thread_ready = old;
+            last_thread_ready = old;
+        } else {
+            last_thread_ready->next = old;
+            last_thread_ready = old;
+        }
+
+        switch_context(&old->esp, &task->esp);
+    }
 }
 
 thread *thread_create(const char *name, void (*entry)(void)) {
@@ -44,7 +80,17 @@ thread *thread_create(const char *name, void (*entry)(void)) {
     *(--sp) = 0;
 
     new_thread->esp = (uint32_t)sp;
-    new_thread->next = current_thread->next;
-    current_thread->next = new_thread;
+
+    lock_scheduler();
+    new_thread->next = NULL;
+    if (first_thread_ready == NULL) {
+        first_thread_ready = new_thread;
+        last_thread_ready = new_thread;
+    } else {
+        last_thread_ready->next = new_thread;
+        last_thread_ready = new_thread;
+    }
+    unlock_scheduler();
+
     return new_thread;
 }

@@ -16,10 +16,13 @@
 #include <stdio.h>
 
 void thread_a() {
-    printf("hello from thread A!\n");
-    schedule();
-    printf("hello from thread A!\n");
-    schedule();
+    unlock_scheduler();
+    for (int i = 0; i < 3; i++) {
+        printf("hello from thread A!\n");
+        lock_scheduler();
+        schedule();
+        unlock_scheduler();
+    }
 
     while (true) {
         __asm__ volatile("hlt");
@@ -27,10 +30,13 @@ void thread_a() {
 }
 
 void thread_b() {
-    printf("hello from thread B!\n");
-    schedule();
-    printf("hello from thread B!\n");
-    schedule();
+    unlock_scheduler();
+    for (int i = 0; i < 3; i++) {
+        printf("hello from thread B!\n");
+        lock_scheduler();
+        schedule();
+        unlock_scheduler();
+    }
 
     while (true) {
         __asm__ volatile("hlt");
@@ -57,10 +63,13 @@ void kernel_main(uint32_t magic, multiboot_info_t *mbd) {
 
     thread *a = thread_create("thread_a", thread_a);
     thread *b = thread_create("thread_b", thread_b);
-    printf("hello from main thread\n");
-    schedule();
-    printf("hello from main thread\n");
-    schedule();
+
+    for (int i = 0; i < 3; i++) {
+        printf("hello from main thread\n");
+        lock_scheduler();
+        schedule();
+        unlock_scheduler();
+    }
 
     write_serial_string("Hello, host!\n");
     while (true) {
