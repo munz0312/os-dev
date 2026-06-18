@@ -1,3 +1,4 @@
-#define IDT_MAX_DESCRIPTORS 256
+#include <stdint.h>
 
 void idt_init();
+uint64_t get_current_ticks();

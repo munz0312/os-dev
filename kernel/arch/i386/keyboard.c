@@ -1,10 +1,9 @@
 #include "sys/io.h"
+#include <kernel/idt.h>
 #include <kernel/keyboard.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-
-extern uint32_t ticks;
 
 char lowercase[128] = {
     0,   0,   '1',  '2',  '3',  '4', '5', '6',  '7', '8', '9', '0',
@@ -60,7 +59,7 @@ void keyboard_handler() {
         break;
     case 59:
         if (press == 0)
-            printf("\nticks: %d\n", ticks);
+            printf("\nticks: %d\n", get_current_ticks());
         break;
     case 60:
     case 61:

@@ -15,27 +15,13 @@
 #include <stdint.h>
 #include <stdio.h>
 
-void thread_a() {
+void thread_sleeper() {
     unlock_scheduler();
     for (int i = 0; i < 3; i++) {
-        printf("hello from thread A!\n");
-        lock_scheduler();
-        schedule();
-        unlock_scheduler();
-    }
-
-    while (true) {
-        __asm__ volatile("hlt");
-    }
-}
-
-void thread_b() {
-    unlock_scheduler();
-    for (int i = 0; i < 3; i++) {
-        printf("hello from thread B!\n");
-        lock_scheduler();
-        schedule();
-        unlock_scheduler();
+        printf("sleeper %d: going to sleep at tick %llu\n", i,
+               get_current_ticks());
+        nanosleep(50);
+        printf("sleeper %d: woke up at tick %llu\n", i, get_current_ticks());
     }
 
     while (true) {
@@ -61,10 +47,10 @@ void kernel_main(uint32_t magic, multiboot_info_t *mbd) {
 
     init_threading();
 
-    thread *a = thread_create("thread_a", thread_a);
-    thread *b = thread_create("thread_b", thread_b);
+    thread *s = thread_create("thread_sleeper", thread_sleeper);
+    (void)s;
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 10; i++) {
         printf("hello from main thread\n");
         lock_scheduler();
         schedule();
@@ -73,6 +59,9 @@ void kernel_main(uint32_t magic, multiboot_info_t *mbd) {
 
     write_serial_string("Hello, host!\n");
     while (true) {
+        lock_scheduler();
+        schedule();
+        unlock_scheduler();
         __asm__ volatile("hlt");
     }
 }

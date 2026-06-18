@@ -1,11 +1,16 @@
 #include <kernel/idt.h>
 #include <kernel/keyboard.h>
 #include <kernel/pic.h>
+#include <kernel/thread.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 
-uint32_t ticks;
+#define IDT_MAX_DESCRIPTORS 256
+
+static uint64_t ticks;
+
+uint64_t get_current_ticks() { return ticks; }
 
 typedef struct __attribute__((packed)) {
     uint16_t offset_low;
@@ -40,6 +45,7 @@ void isr_dispatch(uint32_t vector, uint32_t error_code) {
 
     case 32: {
         ticks += 1;
+        check_wakeup();
         break;
     }
 
