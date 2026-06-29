@@ -50,7 +50,7 @@ void kernel_main(uint32_t magic, multiboot_info_t *mbd) {
     thread *s = thread_create("thread_sleeper", thread_sleeper);
     (void)s;
 
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 2; i++) {
         printf("hello from main thread\n");
         lock_scheduler();
         schedule();
